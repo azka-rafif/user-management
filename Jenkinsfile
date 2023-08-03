@@ -7,5 +7,9 @@ variables([
   "Channel": "#jenkins-build",
   "Class": "small",
   "Sonarqube": "UNSTABLE",
-  "Quality": "FAILURE"
+  "Quality": "FAILURE",
+  "Golang" : "1.15",
+  "UnitTest" : "off",
+  "Security" : "enable",
+  "Stack": "go"
 ]);
