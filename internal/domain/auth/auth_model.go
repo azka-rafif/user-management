@@ -58,10 +58,10 @@ type UserResponseFormat struct {
 	Email      string      `json:"email" validate:"required"`
 	UserName   string      `json:"userName" validate:"required"`
 	Name       string      `json:"name" validate:"required"`
-	Password   string      `json:"password" validate:"required"`
+	Password   string      `json:"-" validate:"required"`
 	Role       string      `json:"role" validate:"required"`
 	CartId     uuid.UUID   `json:"cartId" validate:"required"`
-	Cart       cart.Cart   `json:"cart"`
+	Cart       cart.Cart   `json:"-"`
 	Created_at time.Time   `json:"createdAt" validate:"required"`
 	Updated_at time.Time   `json:"updatedAt" validate:"required"`
 	Deleted_at null.Time   `json:"deletedAt"`
