@@ -19,9 +19,10 @@ type Config struct {
 			Enable           bool     `mapstructure:"ENABLE"`
 			MaxAgeSeconds    int      `mapstructure:"MAX_AGE_SECONDS"`
 		}
-		Name     string `mapstructure:"NAME"`
-		Revision string `mapstructure:"REVISION"`
-		URL      string `mapstructure:"URL"`
+		Name      string `mapstructure:"NAME"`
+		Revision  string `mapstructure:"REVISION"`
+		URL       string `mapstructure:"URL"`
+		JWTSecret string `mapstructure:"JWT_SECRET"`
 	}
 
 	Cache struct {
