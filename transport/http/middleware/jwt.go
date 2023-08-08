@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/evermos/boilerplate-go/configs"
 	"github.com/evermos/boilerplate-go/infras"
@@ -55,10 +54,30 @@ func (a *JwtAuthentication) Validate(next http.Handler) http.Handler {
 			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
-		token = strings.Split(token, "Bearer ")[1]
 		claims, err := a.jwt.ValidateJwt(token)
 		if err != nil {
 			response.WithError(w, failure.Unauthorized(err.Error()))
+			return
+		}
+		ctx := context.WithValue(r.Context(), ClaimsKey("claims"), claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (a *JwtAuthentication) AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get(HeaderJwt)
+		if token == "" {
+			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+		claims, err := a.jwt.ValidateJwt(token)
+		if err != nil {
+			response.WithError(w, failure.Unauthorized(err.Error()))
+			return
+		}
+		if claims.Role != "admin" {
+			response.WithError(w, failure.Unauthorized("Admins are only allowed"))
 			return
 		}
 		ctx := context.WithValue(r.Context(), ClaimsKey("claims"), claims)
