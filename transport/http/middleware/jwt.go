@@ -66,21 +66,15 @@ func (a *JwtAuthentication) Validate(next http.Handler) http.Handler {
 
 func (a *JwtAuthentication) AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get(HeaderJwt)
-		if token == "" {
+		claims, ok := r.Context().Value(ClaimsKey("claims")).(*jwt.Claims)
+		if !ok {
 			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
-		claims, err := a.jwt.ValidateJwt(token)
-		if err != nil {
-			response.WithError(w, failure.Unauthorized(err.Error()))
-			return
-		}
 		if claims.Role != "admin" {
-			response.WithError(w, failure.Unauthorized("Admins are only allowed"))
+			response.WithError(w, failure.Unauthorized("only admins are allowed"))
 			return
 		}
-		ctx := context.WithValue(r.Context(), ClaimsKey("claims"), claims)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r)
 	})
 }
