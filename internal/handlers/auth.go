@@ -24,9 +24,11 @@ func ProvideAuthHandler(service auth.AuthService, jwtAuth *middleware.JwtAuthent
 
 func (h *AuthHandler) Router(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
+		r.Post("/login", h.HandleLogin)
 		r.Group(func(r chi.Router) {
+			r.Use(h.JwtAuth.Validate)
+			r.Use(h.JwtAuth.AdminOnly)
 			r.Post("/register", h.HandleRegister)
-			r.Post("/login", h.HandleLogin)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(h.JwtAuth.Validate)
