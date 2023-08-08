@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -43,7 +44,7 @@ func (j *JWT) GenerateJwt(userId, userName, role, cartId string) (string, error)
 }
 
 func (j *JWT) ValidateJwt(tokenString string) (*Claims, error) {
-
+	tokenString = strings.Split(tokenString, "Bearer ")[1]
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(j.secret), nil
 	})
