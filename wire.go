@@ -1,13 +1,13 @@
-//+build wireinject
+//go:build wireinject
+// +build wireinject
 
 package main
 
 import (
 	"github.com/evermos/boilerplate-go/configs"
-	"github.com/evermos/boilerplate-go/event"
-	fooBarBazEvent "github.com/evermos/boilerplate-go/event/domain/foobarbaz"
 	"github.com/evermos/boilerplate-go/event/producer"
 	"github.com/evermos/boilerplate-go/infras"
+	"github.com/evermos/boilerplate-go/internal/domain/auth"
 	"github.com/evermos/boilerplate-go/internal/domain/foobarbaz"
 	"github.com/evermos/boilerplate-go/internal/handlers"
 	"github.com/evermos/boilerplate-go/transport/http"
@@ -39,27 +39,36 @@ var domainFooBarBaz = wire.NewSet(
 	wire.Bind(new(producer.Producer), new(*producer.SNSProducer)),
 )
 
+var domainAuth = wire.NewSet(
+	auth.ProvideAuthServiceImpl,
+	wire.Bind(new(auth.AuthService), new(*auth.AuthServiceImpl)),
+	auth.ProvideAuthRepositoryMySQL,
+	wire.Bind(new(auth.AuthRepository), new(*auth.AuthRepositoryMySQL)),
+)
+
 // Wiring for all domains.
 var domains = wire.NewSet(
-	domainFooBarBaz,
+	domainFooBarBaz, domainAuth,
 )
 
 var authMiddleware = wire.NewSet(
 	middleware.ProvideAuthentication,
+	middleware.ProvideJwtAuthentication,
 )
 
 // Wiring for HTTP routing.
 var routing = wire.NewSet(
-	wire.Struct(new(router.DomainHandlers), "FooBarBazHandler"),
+	wire.Struct(new(router.DomainHandlers), "FooBarBazHandler", "AuthHandler"),
+	handlers.ProvideAuthHandler,
 	handlers.ProvideFooBarBazHandler,
 	router.ProvideRouter,
 )
 
 // Wiring for all domains event consumer.
-var evco = wire.NewSet(
-	wire.Struct(new(event.Consumers), "FooBarBaz"),
-	fooBarBazEvent.ProvideConsumerImpl,
-)
+// var evco = wire.NewSet(
+// 	wire.Struct(new(event.Consumers), "FooBarBaz"),
+// 	fooBarBazEvent.ProvideConsumerImpl,
+// )
 
 // Wiring for everything.
 func InitializeService() *http.HTTP {
@@ -80,16 +89,16 @@ func InitializeService() *http.HTTP {
 }
 
 // Wiring the event needs.
-func InitializeEvent() event.Consumers {
-	wire.Build(
-		// configurations
-		configurations,
-		// persistences
-		persistences,
-		// domains
-		domains,
-		// event consumer
-		evco)
+// func InitializeEvent() event.Consumers {
+// 	wire.Build(
+// 		// configurations
+// 		configurations,
+// 		// persistences
+// 		persistences,
+// 		// domains
+// 		domains,
+// 		// event consumer
+// 		evco)
 
-	return event.Consumers{}
-}
+// 	return event.Consumers{}
+// }
