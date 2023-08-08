@@ -27,7 +27,7 @@ CREATE TABLE `cart` (
 
 CREATE TABLE `product` (
   `id` char(36) PRIMARY KEY,
-  `name` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
   `stock` int NOT NULL,
   `price` decimal(10,2) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
