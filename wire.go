@@ -5,10 +5,10 @@ package main
 
 import (
 	"github.com/evermos/boilerplate-go/configs"
-	"github.com/evermos/boilerplate-go/event/producer"
 	"github.com/evermos/boilerplate-go/infras"
 	"github.com/evermos/boilerplate-go/internal/domain/auth"
-	"github.com/evermos/boilerplate-go/internal/domain/foobarbaz"
+	"github.com/evermos/boilerplate-go/internal/domain/cart"
+	"github.com/evermos/boilerplate-go/internal/domain/product"
 	"github.com/evermos/boilerplate-go/internal/handlers"
 	"github.com/evermos/boilerplate-go/transport/http"
 	"github.com/evermos/boilerplate-go/transport/http/middleware"
@@ -27,17 +27,17 @@ var persistences = wire.NewSet(
 )
 
 // Wiring for domain FooBarBaz.
-var domainFooBarBaz = wire.NewSet(
-	// FooService interface and implementation
-	foobarbaz.ProvideFooServiceImpl,
-	wire.Bind(new(foobarbaz.FooService), new(*foobarbaz.FooServiceImpl)),
-	// FooRepository interface and implementation
-	foobarbaz.ProvideFooRepositoryMySQL,
-	wire.Bind(new(foobarbaz.FooRepository), new(*foobarbaz.FooRepositoryMySQL)),
-	// Producer interface and implementation
-	producer.NewSNSProducer,
-	wire.Bind(new(producer.Producer), new(*producer.SNSProducer)),
-)
+// var domainFooBarBaz = wire.NewSet(
+// 	// FooService interface and implementation
+// 	foobarbaz.ProvideFooServiceImpl,
+// 	wire.Bind(new(foobarbaz.FooService), new(*foobarbaz.FooServiceImpl)),
+// 	// FooRepository interface and implementation
+// 	foobarbaz.ProvideFooRepositoryMySQL,
+// 	wire.Bind(new(foobarbaz.FooRepository), new(*foobarbaz.FooRepositoryMySQL)),
+// 	// Producer interface and implementation
+// 	producer.NewSNSProducer,
+// 	wire.Bind(new(producer.Producer), new(*producer.SNSProducer)),
+// )
 
 var domainAuth = wire.NewSet(
 	auth.ProvideAuthServiceImpl,
@@ -46,9 +46,23 @@ var domainAuth = wire.NewSet(
 	wire.Bind(new(auth.AuthRepository), new(*auth.AuthRepositoryMySQL)),
 )
 
+var domainProduct = wire.NewSet(
+	product.ProvideProductServiceImpl,
+	wire.Bind(new(product.ProductService), new(*product.ProductServiceImpl)),
+	product.ProvideProductRepositoryMySQL,
+	wire.Bind(new(product.ProductRepository), new(*product.ProductRepositoryMySQL)),
+)
+
+var domainCart = wire.NewSet(
+	cart.ProvideCartServiceImpl,
+	wire.Bind(new(cart.CartService), new(*cart.CartServiceImpl)),
+	cart.ProvideCartRepositoryMySQL,
+	wire.Bind(new(cart.CartRepository), new(*cart.CartRepositoryMySQL)),
+)
+
 // Wiring for all domains.
 var domains = wire.NewSet(
-	domainFooBarBaz, domainAuth,
+	domainAuth, domainProduct, domainCart,
 )
 
 var authMiddleware = wire.NewSet(
@@ -58,9 +72,10 @@ var authMiddleware = wire.NewSet(
 
 // Wiring for HTTP routing.
 var routing = wire.NewSet(
-	wire.Struct(new(router.DomainHandlers), "FooBarBazHandler", "AuthHandler"),
+	wire.Struct(new(router.DomainHandlers), "AuthHandler", "ProductHandler", "CartHandler"),
 	handlers.ProvideAuthHandler,
-	handlers.ProvideFooBarBazHandler,
+	handlers.ProvideCartHandler,
+	handlers.ProvideProductHandler,
 	router.ProvideRouter,
 )
 
