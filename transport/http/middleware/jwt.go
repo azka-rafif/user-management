@@ -10,6 +10,8 @@ import (
 	"github.com/evermos/boilerplate-go/shared/failure"
 	"github.com/evermos/boilerplate-go/shared/jwt"
 	"github.com/evermos/boilerplate-go/transport/http/response"
+	"github.com/go-chi/chi"
+	"github.com/gofrs/uuid"
 )
 
 type JwtAuthentication struct {
@@ -73,6 +75,27 @@ func (a *JwtAuthentication) AdminOnly(next http.Handler) http.Handler {
 		}
 		if claims.Role != "admin" {
 			response.WithError(w, failure.Unauthorized("only admins are allowed"))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (a *JwtAuthentication) CartAccess(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		idString := chi.URLParam(r, "cartId")
+		id, err := uuid.FromString(idString)
+		if err != nil {
+			response.WithError(w, failure.BadRequest(err))
+			return
+		}
+		claims, ok := r.Context().Value(ClaimsKey("claims")).(*jwt.Claims)
+		if !ok {
+			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+		if claims.CartId != id.String() && claims.Role != "admin" {
+			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized, invalid credentials")
 			return
 		}
 		next.ServeHTTP(w, r)
