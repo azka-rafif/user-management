@@ -97,10 +97,6 @@ BEGIN
 END;
 |
 
-DELIMITER ;
-
-DELIMITER |
-
 CREATE TRIGGER `update_cart_items_on_product_price_update` AFTER UPDATE ON `product`
 FOR EACH ROW
 BEGIN
@@ -109,5 +105,22 @@ BEGIN
   WHERE `product_id` = NEW.id;
 END;
 |
+
+CREATE TRIGGER `update_stock_product_on_insert` AFTER INSERT ON `order_item`
+FOR EACH ROW 
+BEGIN
+	UPDATE product
+	SET stock = stock - NEW.quantity
+	WHERE id = NEW.product_id;
+END;
+|
+
+CREATE TRIGGER `update_stock_product_on_delete` AFTER DELETE ON `order_item`
+FOR EACH ROW
+BEGIN
+  UPDATE `product`
+  SET `stock` = `stock` + OLD.quantity
+  WHERE `id` = OLD.product_id;
+END;
 
 DELIMITER ;
