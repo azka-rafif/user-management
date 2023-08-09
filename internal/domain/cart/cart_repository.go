@@ -11,6 +11,7 @@ type CartRepository interface {
 	CreateItem(item CartItem) (err error)
 	GetCartByID(cartId string) (res Cart, err error)
 	GetCartItems(cartId string) (res []CartItem, err error)
+	CartItemExistsByID(id string) (exists bool, err error)
 }
 
 type CartRepositoryMySQL struct {
@@ -82,5 +83,14 @@ func (r *CartRepositoryMySQL) txCreateItem(tx *sqlx.Tx, load CartItem) (err erro
 }
 
 func (r *CartRepositoryMySQL) Checkout() (err error) {
+	return
+}
+
+func (r *CartRepositoryMySQL) CartItemExistsByID(id string) (exists bool, err error) {
+	err = r.DB.Read.Get(&exists, "SELECT COUNT(id) FROM cart_item WHERE id = ?", id)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
 	return
 }
