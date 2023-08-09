@@ -17,8 +17,8 @@ type Cart struct {
 	CreatedAt time.Time   `db:"created_at" validate:"required"`
 	UpdatedAt time.Time   `db:"updated_at" validate:"required"`
 	DeletedAt null.Time   `db:"deleted_at"`
-	CreatedBy uuid.UUID   `db:"created_by"`
-	UpdatedBy uuid.UUID   `db:"updated_by"`
+	CreatedBy uuid.UUID   `db:"created_by" validate:"required"`
+	UpdatedBy uuid.UUID   `db:"updated_by" validate:"required"`
 	DeletedBy nuuid.NUUID `db:"deleted_by"`
 }
 
@@ -31,8 +31,8 @@ type CartItem struct {
 	CreatedAt time.Time   `db:"created_at" validate:"required"`
 	UpdatedAt time.Time   `db:"updated_at" validate:"required"`
 	DeletedAt null.Time   `db:"deleted_at"`
-	CreatedBy uuid.UUID   `db:"created_by"`
-	UpdatedBy uuid.UUID   `db:"updated_by"`
+	CreatedBy uuid.UUID   `db:"created_by" validate:"required"`
+	UpdatedBy uuid.UUID   `db:"updated_by" validate:"required"`
 	DeletedBy nuuid.NUUID `db:"deleted_by"`
 }
 
@@ -44,6 +44,10 @@ type CartItemPayload struct {
 type CartPayload struct {
 	CartId uuid.UUID `json:"id" validate:"required"`
 	UserId uuid.UUID `json:"userId" validate:"required"`
+}
+
+type CheckoutPayload struct {
+	CartItemsIds []string `json:"items" validate:"required"`
 }
 
 type CartResponseFormat struct {
