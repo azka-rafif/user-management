@@ -8,6 +8,7 @@ import (
 	"github.com/evermos/boilerplate-go/infras"
 	"github.com/evermos/boilerplate-go/internal/domain/auth"
 	"github.com/evermos/boilerplate-go/internal/domain/cart"
+	"github.com/evermos/boilerplate-go/internal/domain/order"
 	"github.com/evermos/boilerplate-go/internal/domain/product"
 	"github.com/evermos/boilerplate-go/internal/handlers"
 	"github.com/evermos/boilerplate-go/transport/http"
@@ -25,19 +26,6 @@ var configurations = wire.NewSet(
 var persistences = wire.NewSet(
 	infras.ProvideMySQLConn,
 )
-
-// Wiring for domain FooBarBaz.
-// var domainFooBarBaz = wire.NewSet(
-// 	// FooService interface and implementation
-// 	foobarbaz.ProvideFooServiceImpl,
-// 	wire.Bind(new(foobarbaz.FooService), new(*foobarbaz.FooServiceImpl)),
-// 	// FooRepository interface and implementation
-// 	foobarbaz.ProvideFooRepositoryMySQL,
-// 	wire.Bind(new(foobarbaz.FooRepository), new(*foobarbaz.FooRepositoryMySQL)),
-// 	// Producer interface and implementation
-// 	producer.NewSNSProducer,
-// 	wire.Bind(new(producer.Producer), new(*producer.SNSProducer)),
-// )
 
 var domainAuth = wire.NewSet(
 	auth.ProvideAuthServiceImpl,
@@ -60,9 +48,16 @@ var domainCart = wire.NewSet(
 	wire.Bind(new(cart.CartRepository), new(*cart.CartRepositoryMySQL)),
 )
 
+var domainOrder = wire.NewSet(
+	order.ProvideOrderServiceImpl,
+	wire.Bind(new(order.OrderService), new(*order.OrderServiceImpl)),
+	order.ProvideOrderRepositoryMySQL,
+	wire.Bind(new(order.OrderRepository), new(*order.OrderRepositoryMySQL)),
+)
+
 // Wiring for all domains.
 var domains = wire.NewSet(
-	domainAuth, domainProduct, domainCart,
+	domainAuth, domainProduct, domainCart, domainOrder,
 )
 
 var authMiddleware = wire.NewSet(
@@ -72,18 +67,13 @@ var authMiddleware = wire.NewSet(
 
 // Wiring for HTTP routing.
 var routing = wire.NewSet(
-	wire.Struct(new(router.DomainHandlers), "AuthHandler", "ProductHandler", "CartHandler"),
+	wire.Struct(new(router.DomainHandlers), "AuthHandler", "ProductHandler", "CartHandler", "OrderHandler"),
 	handlers.ProvideAuthHandler,
 	handlers.ProvideCartHandler,
+	handlers.ProvideOrderHandler,
 	handlers.ProvideProductHandler,
 	router.ProvideRouter,
 )
-
-// Wiring for all domains event consumer.
-// var evco = wire.NewSet(
-// 	wire.Struct(new(event.Consumers), "FooBarBaz"),
-// 	fooBarBazEvent.ProvideConsumerImpl,
-// )
 
 // Wiring for everything.
 func InitializeService() *http.HTTP {
@@ -102,18 +92,3 @@ func InitializeService() *http.HTTP {
 		http.ProvideHTTP)
 	return &http.HTTP{}
 }
-
-// Wiring the event needs.
-// func InitializeEvent() event.Consumers {
-// 	wire.Build(
-// 		// configurations
-// 		configurations,
-// 		// persistences
-// 		persistences,
-// 		// domains
-// 		domains,
-// 		// event consumer
-// 		evco)
-
-// 	return event.Consumers{}
-// }
