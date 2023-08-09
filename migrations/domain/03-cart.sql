@@ -98,3 +98,16 @@ END;
 |
 
 DELIMITER ;
+
+DELIMITER |
+
+CREATE TRIGGER `update_cart_items_on_product_price_update` AFTER UPDATE ON `product`
+FOR EACH ROW
+BEGIN
+  UPDATE `cart_item`
+  SET `price` = NEW.price * `quantity`
+  WHERE `product_id` = NEW.id;
+END;
+|
+
+DELIMITER ;
