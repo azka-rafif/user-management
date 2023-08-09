@@ -30,10 +30,10 @@ type ProductResponseFormat struct {
 	Price      float64     `json:"price" validate:"true"`
 	Created_at time.Time   `json:"createdAt" validate:"required"`
 	Updated_at time.Time   `json:"updatedAt" validate:"required"`
-	Deleted_at null.Time   `json:"deletedAt"`
+	Deleted_at null.Time   `json:"deletedAt,omitempty"`
 	Created_by uuid.UUID   `json:"createdBy"`
 	Updated_by uuid.UUID   `json:"updatedBy"`
-	Deleted_by nuuid.NUUID `json:"deletedBy"`
+	Deleted_by nuuid.NUUID `json:"deletedBy,omitempty"`
 }
 
 type ProductPayload struct {
@@ -73,6 +73,6 @@ func (p Product) ToResponseFormat() ProductResponseFormat {
 	return ProductResponseFormat(p)
 }
 
-func (p *ProductResponseFormat) MarshalJSON() ([]byte, error) {
-	return json.Marshal(p)
+func (p *Product) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.ToResponseFormat())
 }
