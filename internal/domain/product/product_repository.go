@@ -14,6 +14,7 @@ type ProductRepository interface {
 	Create(prod Product) (err error)
 	GetAll(limit, offset int, sort, field, productTitle string) (res []Product, err error)
 	ExistsByID(id string) (exists bool, err error)
+	GetByID(id string) (res Product, err error)
 }
 
 type ProductRepositoryMySQL struct {
@@ -63,7 +64,6 @@ func (r *ProductRepositoryMySQL) GetAll(limit, offset int, sort, field, productT
 		query += fmt.Sprintf("COLLATE UTF8_GENERAL_CI LIKE '%%%s%%' ", productTitle)
 	}
 	query += fmt.Sprintf("ORDER BY %s %s LIMIT %d OFFSET %d", field, sort, limit, offset)
-	println(query)
 	err = r.DB.Read.Select(&res, query)
 
 	if err != nil {
