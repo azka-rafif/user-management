@@ -52,5 +52,10 @@ func (s *ProductServiceImpl) GetByID(id uuid.UUID) (res Product, err error) {
 		return
 	}
 
+	res, err = s.Repo.GetByID(id.String())
+	if err != nil {
+		return
+	}
+
 	return
 }
