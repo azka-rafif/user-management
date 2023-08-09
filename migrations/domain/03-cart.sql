@@ -56,7 +56,6 @@ CREATE TABLE `order` (
   `id` char(36) PRIMARY KEY,
   `user_id` char(36) NOT NULL,
   `total_price` decimal(10,2) NOT NULL,
-  `address` varchar(255) NOT NULL,
   `status` ENUM ('pending', 'shipped', 'paid') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -94,7 +93,7 @@ CREATE TRIGGER `create_cart_on_user_insert` AFTER INSERT ON `user`
 FOR EACH ROW
 BEGIN
   INSERT INTO `cart` (`id`, `user_id`, `created_at`, `updated_at`, `deleted_at`, `created_by`, `updated_by`, `deleted_by`)
-  VALUES (NEW.cart_id, NEW.id, NEW.created_at, NEW.updated_at, NEW.deleted_at, NEW.id, NEW.id, NEW.deleted_at);
+  VALUES (NEW.cart_id, NEW.id, NEW.created_at, NEW.updated_at, NEW.deleted_at, NEW.id, NEW.id, NEW.deleted_by);
 END;
 |
 
