@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 
 	"github.com/evermos/boilerplate-go/internal/domain/product"
@@ -90,10 +91,11 @@ func (h *ProductHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 	productTitle := pagination.ParseQueryParams(r, "product_title")
 	offset := (page - 1) * limit
 	res, err := h.Service.GetAll(limit, offset, sort, field, productTitle)
+	totalPage := int(math.Ceil(float64(len(res)) / float64(limit)))
 
 	if err != nil {
 		response.WithError(w, err)
 		return
 	}
-	response.WithJSON(w, http.StatusOK, res)
+	response.WithPagination(w, http.StatusOK, res, page, limit, totalPage)
 }
