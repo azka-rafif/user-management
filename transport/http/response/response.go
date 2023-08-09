@@ -15,6 +15,13 @@ type Base struct {
 	Message *string      `json:"message,omitempty"`
 }
 
+type Pagination struct {
+	Data      interface{} `json:"data"`
+	Page      int         `json:"page"`
+	Limit     int         `json:"limit"`
+	TotalPage int         `json:"totalPage"`
+}
+
 // NoContent sends a response without any content
 func NoContent(w http.ResponseWriter) {
 	respond(w, http.StatusNoContent, nil)
@@ -28,6 +35,10 @@ func WithMessage(w http.ResponseWriter, code int, message string) {
 // WithJSON sends a response containing a JSON object
 func WithJSON(w http.ResponseWriter, code int, jsonPayload interface{}) {
 	respond(w, code, Base{Data: &jsonPayload})
+}
+
+func WithPagination(w http.ResponseWriter, code int, jsonPayload interface{}, page, limit, totalPage int) {
+	respond(w, code, Pagination{Data: jsonPayload, Page: page, Limit: limit, TotalPage: totalPage})
 }
 
 // WithError sends a response with an error message
