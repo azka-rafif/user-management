@@ -32,10 +32,6 @@ func (r *AuthRepositoryMySQL) Create(user User) (err error) {
 			c <- err
 			return
 		}
-		if err := r.txCreateCart(db, user); err != nil {
-			c <- err
-			return
-		}
 		c <- nil
 	})
 }
@@ -92,24 +88,6 @@ func (r *AuthRepositoryMySQL) txCreate(tx *sqlx.Tx, payload User) (err error) {
 	_, err = stmt.Exec(payload)
 	if err != nil {
 		// err = failure.Conflict("create", "user", "already exist")
-		logger.ErrorWithStack(err)
-		return
-	}
-	return
-}
-
-func (r *AuthRepositoryMySQL) txCreateCart(tx *sqlx.Tx, payload User) (err error) {
-	query := `INSERT INTO cart (id,user_id,created_at,created_by,updated_at,updated_by)
-	VALUES (:id,:user_id,:created_at,:created_by,:updated_at,:updated_by)`
-	stmt, err := tx.PrepareNamed(query)
-	if err != nil {
-		logger.ErrorWithStack(err)
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(payload.Cart)
-	if err != nil {
-		err = failure.Conflict("create", "cart", "already exist")
 		logger.ErrorWithStack(err)
 		return
 	}

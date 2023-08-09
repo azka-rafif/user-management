@@ -88,5 +88,14 @@ ALTER TABLE `order` ADD FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELE
 ALTER TABLE `order_item` ADD FOREIGN KEY (`order_id`) REFERENCES `order` (`id`) ON DELETE CASCADE;
 ALTER TABLE `order_item` ADD FOREIGN KEY (`product_id`) REFERENCES `product` (`id`) ON DELETE CASCADE;
 
+DELIMITER |
 
+CREATE TRIGGER `create_cart_on_user_insert` AFTER INSERT ON `user`
+FOR EACH ROW
+BEGIN
+  INSERT INTO `cart` (`id`, `user_id`, `created_at`, `updated_at`, `deleted_at`, `created_by`, `updated_by`, `deleted_by`)
+  VALUES (NEW.cart_id, NEW.id, NEW.created_at, NEW.updated_at, NEW.deleted_at, NEW.id, NEW.id, NEW.deleted_at);
+END;
+|
 
+DELIMITER ;
