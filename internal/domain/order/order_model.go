@@ -99,3 +99,8 @@ func (o *OrderItem) Validate() error {
 	validator := shared.GetValidator()
 	return validator.Struct(o)
 }
+
+func (o *Order) AttachItems(load []OrderItem) Order {
+	o.OrderItems = append(o.OrderItems, load...)
+	return *o
+}
