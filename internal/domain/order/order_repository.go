@@ -11,7 +11,7 @@ import (
 
 type OrderRepository interface {
 	Create(load Order) (err error)
-	GetAll(limit, offset int, sort, field, status string) (res []Order, err error)
+	GetAll(limit, offset int, sort, field, status, userId, userRole string) (res []Order, err error)
 }
 
 type OrderRepositoryMySQL struct {
@@ -113,15 +113,25 @@ func (r *OrderRepositoryMySQL) composeBulkInsertItemQuery(load []OrderItem) (que
 	return
 }
 
-func (r *OrderRepositoryMySQL) GetAll(limit, offset int, sort, field, status string) (res []Order, err error) {
+func (r *OrderRepositoryMySQL) GetAll(limit, offset int, sort, field, status, userId, userRole string) (res []Order, err error) {
 	query := `SELECT * FROM atc_order `
 
+	if userRole != "admin" {
+		query += fmt.Sprintf("WHERE user_id = '%s' ", userId)
+	}
 	if status != "" {
-		query += fmt.Sprintf("WHERE status = %s", status)
+		exists := strings.Contains(query, "WHERE")
+		if !exists && userRole != "admin" {
+			query += "WHERE "
+		}
+		if exists && strings.Contains(query, "user_id") {
+			query += "AND "
+		}
+		query += fmt.Sprintf("status = '%s' ", status)
 	}
 	query += fmt.Sprintf("ORDER BY %s %s LIMIT %d OFFSET %d", field, sort, limit, offset)
 	err = r.DB.Read.Select(&res, query)
-
+	println(query)
 	if err != nil {
 		logger.ErrorWithStack(err)
 		return
