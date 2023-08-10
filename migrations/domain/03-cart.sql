@@ -123,12 +123,5 @@ BEGIN
   WHERE `id` = OLD.product_id;
 END;
 
-CREATE TRIGGER `after_order_item_insert`
-AFTER INSERT ON order_item
-FOR EACH ROW
-BEGIN
-    DELETE FROM cart_item WHERE product_id = NEW.product_id;
-END;
-
 |
 DELIMITER ;
