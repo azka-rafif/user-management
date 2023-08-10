@@ -154,7 +154,7 @@ func (h *CartHandler) HandleGetCartItems(w http.ResponseWriter, r *http.Request)
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
-// @Router /v1/cart/{cartId} [post]
+// @Router /v1/cart/{cartId}/checkout [post]
 func (h *CartHandler) HandleCheckout(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	cartId, err := uuid.FromString(idString)
