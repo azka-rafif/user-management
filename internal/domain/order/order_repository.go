@@ -10,6 +10,8 @@ import (
 )
 
 type OrderRepository interface {
+	Create(load Order) (err error)
+	GetAll(limit, offset int, sort, field, status string) (res []Order, err error)
 }
 
 type OrderRepositoryMySQL struct {
@@ -35,9 +37,8 @@ func (r *OrderRepositoryMySQL) Create(load Order) (err error) {
 }
 
 func (r *OrderRepositoryMySQL) txCreate(tx *sqlx.Tx, load Order) (err error) {
-	query := `INSERT INTO order (id,user_id,total_price,status,created_at,updated_at,created_by,updated_by)
-    VALUES (:id,:user_id,:total_price,:status,:created_at,:updated_at,:created_by,:updated_by)`
-
+	query := `INSERT INTO atc_order (id,user_id,total_price,status,created_at,updated_at,created_by,updated_by) 
+	VALUES (:id,:user_id,:total_price,:status,:created_at,:updated_at,:created_by,:updated_by)`
 	stmt, err := tx.PrepareNamed(query)
 	if err != nil {
 		logger.ErrorWithStack(err)
@@ -91,23 +92,39 @@ func (r *OrderRepositoryMySQL) composeBulkInsertItemQuery(load []OrderItem) (que
 			"created_by": oi.CreatedBy,
 			"updated_by": oi.UpdatedBy,
 		}
-		q, args, err := sqlx.Named(`:id,:order_id,:product_id,:quantity,:price,:created_at,:updated_at,:created_by,:updated_by`, param)
+		q, args, err := sqlx.Named(`(:id,:order_id,:product_id,:quantity,:price,:created_at,:updated_at,:created_by,:updated_by)`, param)
 		if err != nil {
 			return query, params, err
 		}
 		values = append(values, q)
 		params = append(params, args...)
 	}
-	query = fmt.Sprintf("%v %v", `INSERT INTO order_item (
+	query = fmt.Sprintf(`%v %v`, `INSERT INTO order_item (
 				id,
 				order_id,
 				product_id,
 				quantity,
 				price,
 				created_at,
-				updated_by,
+				updated_at,
 				created_by,
 				updated_by
 			) VALUES `, strings.Join(values, ","))
+	return
+}
+
+func (r *OrderRepositoryMySQL) GetAll(limit, offset int, sort, field, status string) (res []Order, err error) {
+	query := `SELECT * FROM atc_order `
+
+	if status != "" {
+		query += fmt.Sprintf("WHERE status = %s", status)
+	}
+	query += fmt.Sprintf("ORDER BY %s %s LIMIT %d OFFSET %d", field, sort, limit, offset)
+	err = r.DB.Read.Select(&res, query)
+
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
 	return
 }
