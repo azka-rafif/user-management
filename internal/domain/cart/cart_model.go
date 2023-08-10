@@ -151,3 +151,20 @@ func (c CartItem) ToResponseFormat() (res CartItemResponseFormat) {
 func (c Cart) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c.ToResponseFormat())
 }
+
+func (c *Cart) GetItemsTotalPrice() (total float64) {
+	for _, item := range c.CartItems {
+		total += item.Price
+	}
+	return
+}
+
+func (c *CartItem) Update(load CartItemPayload, userId uuid.UUID) {
+	c.Quantity += load.Quantity
+	c.UpdatedAt = time.Now().UTC()
+	c.UpdatedBy = userId
+}
+
+func (c *CartItem) Recalculate(productPrice float64) {
+	c.Price = float64(c.Quantity) * productPrice
+}
