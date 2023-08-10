@@ -1,6 +1,7 @@
 package order
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/evermos/boilerplate-go/shared"
@@ -35,6 +36,34 @@ type OrderItem struct {
 	CreatedBy uuid.UUID   `db:"created_by" validate:"required"`
 	UpdatedBy uuid.UUID   `db:"updated_by" validate:"required"`
 	DeletedBy nuuid.NUUID `db:"deleted_by"`
+}
+
+type OrderResponseFormat struct {
+	Id         uuid.UUID   `json:"id" validate:"required"`
+	UserId     uuid.UUID   `json:"userId" validate:"required"`
+	TotalPrice float64     `json:"totalPrice" validate:"required"`
+	Status     string      `json:"status" validate:"required"`
+	OrderItems []OrderItem `json:"-"`
+	CreatedAt  time.Time   `json:"createdAt" validate:"required"`
+	UpdatedAt  time.Time   `json:"updatedAt" validate:"required"`
+	DeletedAt  null.Time   `json:"deletedAt"`
+	CreatedBy  uuid.UUID   `json:"createdBy" validate:"required"`
+	UpdatedBy  uuid.UUID   `json:"updatedBy" validate:"required"`
+	DeletedBy  nuuid.NUUID `json:"deletedBy"`
+}
+
+type OrderItemResponseFormat struct {
+	Id        uuid.UUID   `json:"id" validate:"required"`
+	OrderId   uuid.UUID   `json:"orderId" validate:"required"`
+	ProductId uuid.UUID   `json:"productId" validate:"required"`
+	Quantity  int         `json:"quantity" validate:"required"`
+	Price     float64     `json:"price" validate:"required"`
+	CreatedAt time.Time   `json:"createdAt" validate:"required"`
+	UpdatedAt time.Time   `json:"updatedAt" validate:"required"`
+	DeletedAt null.Time   `json:"deletedAt"`
+	CreatedBy uuid.UUID   `json:"createdBy" validate:"required"`
+	UpdatedBy uuid.UUID   `json:"updatedBy" validate:"required"`
+	DeletedBy nuuid.NUUID `json:"deletedBy"`
 }
 
 type OrderPayload struct {
@@ -103,4 +132,20 @@ func (o *OrderItem) Validate() error {
 func (o *Order) AttachItems(load []OrderItem) Order {
 	o.OrderItems = append(o.OrderItems, load...)
 	return *o
+}
+
+func (o Order) ToResponseFormat() OrderResponseFormat {
+	return OrderResponseFormat(o)
+}
+
+func (o OrderItem) ToResponseFormat() OrderItemResponseFormat {
+	return OrderItemResponseFormat(o)
+}
+
+func (o *Order) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.ToResponseFormat())
+}
+
+func (o *OrderItem) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.ToResponseFormat())
 }
