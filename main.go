@@ -10,6 +10,9 @@ import (
 
 var config *configs.Config
 
+// @securityDefinitions.apikey JWTToken
+// @in header
+// @name Authorization
 func main() {
 	// Initialize logger
 	logger.InitLogger()
