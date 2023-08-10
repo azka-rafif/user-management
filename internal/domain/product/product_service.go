@@ -9,6 +9,7 @@ type ProductService interface {
 	Create(load ProductPayload, userId uuid.UUID) (res Product, err error)
 	GetAll(limit, offset int, sort, field, productTitle string) (res []Product, err error)
 	GetByID(id uuid.UUID) (res Product, err error)
+	ExistsByID(id uuid.UUID) (exists bool, err error)
 }
 
 type ProductServiceImpl struct {
@@ -57,5 +58,10 @@ func (s *ProductServiceImpl) GetByID(id uuid.UUID) (res Product, err error) {
 		return
 	}
 
+	return
+}
+
+func (s *ProductServiceImpl) ExistsByID(id uuid.UUID) (exists bool, err error) {
+	exists, err = s.Repo.ExistsByID(id.String())
 	return
 }
