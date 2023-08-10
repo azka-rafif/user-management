@@ -36,6 +36,19 @@ func (h *CartHandler) Router(r chi.Router) {
 	})
 }
 
+// HandleRegister Adds a product into a cart.
+// @Summary Adds a product into a users cart.
+// @Description This endpoint Creates a cart item and put it into a users cart.
+// @Tags v1/Cart
+// @Security JWTToken
+// @Param cartId path string true "the cart id"
+// @Param CartItem body cart.CartItemPayload true "The product to be added to the cart."
+// @Produce json
+// @Success 201 {object} response.Base{data=cart.CartItemResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/cart/{cartId} [post]
 func (h *CartHandler) HandleAddToCart(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	cartId, err := uuid.FromString(idString)
@@ -75,6 +88,18 @@ func (h *CartHandler) HandleAddToCart(w http.ResponseWriter, r *http.Request) {
 	response.WithJSON(w, http.StatusCreated, res)
 }
 
+// HandleGetCart Gets a Cart.
+// @Summary Gets a users cart.
+// @Description This endpoint Gets a users cart.
+// @Tags v1/Cart
+// @Security JWTToken
+// @Param cartId path string true "the cart id"
+// @Produce json
+// @Success 201 {object} response.Base{data=cart.CartResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/cart/{cartId} [get]
 func (h *CartHandler) HandleGetCart(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	id, err := uuid.FromString(idString)
@@ -90,6 +115,18 @@ func (h *CartHandler) HandleGetCart(w http.ResponseWriter, r *http.Request) {
 	response.WithJSON(w, http.StatusOK, res)
 }
 
+// HandleGetCartItems Gets only the carts items.
+// @Summary Gets the cart items.
+// @Description This endpoint only gets the carts items.
+// @Tags v1/Cart
+// @Security JWTToken
+// @Param cartId path string true "the cart id"
+// @Produce json
+// @Success 201 {object} response.Base{data=[]cart.CartItemResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/cart/{cartId}/items [get]
 func (h *CartHandler) HandleGetCartItems(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	id, err := uuid.FromString(idString)
@@ -102,9 +139,22 @@ func (h *CartHandler) HandleGetCartItems(w http.ResponseWriter, r *http.Request)
 		response.WithError(w, err)
 		return
 	}
-	response.WithJSON(w, http.StatusOK, res)
+	response.WithJSON(w, http.StatusOK, res.CartItems)
 }
 
+// HandleCheckout checkout a list of cart items.
+// @Summary checkout a list of cart items.
+// @Description This endpoint checkout the list of cart item ids given.
+// @Tags v1/Cart
+// @Security JWTToken
+// @Param cartId path string true "the cart id"
+// @Param CartItemIds body cart.CheckoutPayload true "The items to be checked out"
+// @Produce json
+// @Success 201 {object} response.Base{data=order.OrderResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/cart/{cartId} [post]
 func (h *CartHandler) HandleCheckout(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	cartId, err := uuid.FromString(idString)
