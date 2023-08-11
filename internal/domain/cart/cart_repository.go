@@ -1,6 +1,8 @@
 package cart
 
 import (
+	"fmt"
+
 	"github.com/evermos/boilerplate-go/infras"
 	"github.com/evermos/boilerplate-go/shared/logger"
 	"github.com/jmoiron/sqlx"
@@ -17,6 +19,7 @@ type CartRepository interface {
 	ProductExistsInCart(productId, cartId string) (exists bool, err error)
 	GetCartItemByProduct(productId, cartId string) (res CartItem, err error)
 	UpdateItem(item CartItem) (err error)
+	GetAllCarts(limit, offset int, sort, field string) (res []Cart, err error)
 }
 
 type CartRepositoryMySQL struct {
@@ -173,6 +176,17 @@ func (r *CartRepositoryMySQL) txUpdateItem(tx *sqlx.Tx, item CartItem) (err erro
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(item)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *CartRepositoryMySQL) GetAllCarts(limit, offset int, sort, field string) (res []Cart, err error) {
+	query := `SELECT * FROM cart `
+	query += fmt.Sprintf("ORDER BY %s %s LIMIT %d OFFSET %d", field, sort, limit, offset)
+	err = r.DB.Read.Select(&res, query)
 	if err != nil {
 		logger.ErrorWithStack(err)
 		return

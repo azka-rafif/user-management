@@ -13,6 +13,7 @@ type CartService interface {
 	AddToCart(load CartItemPayload, userId, cartId uuid.UUID) (res CartItem, err error)
 	GetCart(cartId uuid.UUID) (res Cart, err error)
 	Checkout(load CheckoutPayload, cartId, userId uuid.UUID) (res order.Order, err error)
+	GetAllCarts(limit, offset int, sort, field string) (res []Cart, err error)
 }
 
 type CartServiceImpl struct {
@@ -168,6 +169,14 @@ func (s *CartServiceImpl) UpdateCartItem(load CartItemPayload, userId, cartId, p
 
 func (s *CartServiceImpl) ProductExistsInCart(cartId, prodId uuid.UUID) (exists bool, err error) {
 	exists, err = s.Repo.ProductExistsInCart(prodId.String(), cartId.String())
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s *CartServiceImpl) GetAllCarts(limit, offset int, sort, field string) (res []Cart, err error) {
+	res, err = s.Repo.GetAllCarts(limit, offset, sort, field)
 	if err != nil {
 		return
 	}

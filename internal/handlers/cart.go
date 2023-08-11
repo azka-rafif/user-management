@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 
 	"github.com/evermos/boilerplate-go/internal/domain/cart"
 	"github.com/evermos/boilerplate-go/shared"
 	"github.com/evermos/boilerplate-go/shared/failure"
 	"github.com/evermos/boilerplate-go/shared/jwt"
+	"github.com/evermos/boilerplate-go/shared/pagination"
 	"github.com/evermos/boilerplate-go/transport/http/middleware"
 	"github.com/evermos/boilerplate-go/transport/http/response"
 	"github.com/go-chi/chi"
@@ -32,6 +34,10 @@ func (h *CartHandler) Router(r chi.Router) {
 			r.Post("/", h.HandleAddToCart)
 			r.Get("/items", h.HandleGetCartItems)
 			r.Post("/checkout", h.HandleCheckout)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(h.JwtAuth.AdminOnly)
+			r.Get("/", h.HandleGetAllCarts)
 		})
 	})
 }
@@ -190,4 +196,44 @@ func (h *CartHandler) HandleCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.WithJSON(w, http.StatusCreated, res)
+}
+
+// HandleGetAll Gets all carts.
+// @Summary Gets all carts.
+// @Description This endpoint Gets all carts of users.
+// @Tags v1/Order
+// @Security JWTToken
+// @Param page query int true "current page number"
+// @Param limit query int true "limit of carts per page"
+// @Param sort query string false "sort direction"
+// @Param field query string false "field to sort by"
+// @Produce json
+// @Success 200 {object} response.Pagination{data=[]cart.CartResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/carts [get]
+func (h *CartHandler) HandleGetAllCarts(w http.ResponseWriter, r *http.Request) {
+	page, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "page"))
+	if err != nil {
+		response.WithError(w, failure.BadRequest(err))
+		return
+	}
+
+	limit, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "limit"))
+	if err != nil {
+		response.WithError(w, failure.BadRequest(err))
+		return
+	}
+	sort := pagination.GetSortDirection(pagination.ParseQueryParams(r, "sort"))
+	field := pagination.CheckFieldQuery(pagination.ParseQueryParams(r, "field"), "id")
+	offset := (page - 1) * limit
+	res, err := h.Service.GetAllCarts(limit, offset, sort, field)
+	totalPage := int(math.Ceil(float64(len(res)) / float64(limit)))
+
+	if err != nil {
+		response.WithError(w, err)
+		return
+	}
+	response.WithPagination(w, http.StatusOK, res, page, limit, totalPage)
 }
