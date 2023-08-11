@@ -35,11 +35,6 @@ func (h *AuthHandler) Router(r chi.Router) {
 			r.Get("/validate", h.HandleValidate)
 		})
 	})
-	r.Route("/profile", func(r chi.Router) {
-		r.Use(h.JwtAuth.Validate)
-		r.Get("/", h.HandleGetProfile)
-		r.Put("/", h.HandleUpdateProfile)
-	})
 }
 
 // HandleRegister creates a new User.
@@ -49,7 +44,7 @@ func (h *AuthHandler) Router(r chi.Router) {
 // @Security JWTToken
 // @Param User body auth.AuthPayload true "The User to be created."
 // @Produce json
-// @Success 201 {object} response.Base{data=auth.JwtResponseFormat}
+// @Success 200 {object} response.Base{data=auth.JwtResponseFormat}
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
@@ -82,7 +77,7 @@ func (h *AuthHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 // @Tags v1/Auth
 // @Param User body auth.LoginPayload true "The User to be logged in."
 // @Produce json
-// @Success 201 {object} response.Base{data=auth.JwtResponseFormat}
+// @Success 200 {object} response.Base{data=auth.JwtResponseFormat}
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
@@ -117,7 +112,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 // @Tags v1/Auth
 // @Security JWTToken
 // @Produce json
-// @Success 200 {object} response.Base{data=auth.UserResponseFormat}
+// @Success 200 {object} response.Base{data=user.UserResponseFormat}
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
@@ -130,68 +125,4 @@ func (h *AuthHandler) HandleValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.WithJSON(w, http.StatusOK, claims)
-}
-
-// HandleValidate Get User Profile.
-// @Summary Gets a User Profile.
-// @Description This endpoint Get User Profile.
-// @Tags v1/Profile
-// @Security JWTToken
-// @Produce json
-// @Success 200 {object} response.Base{data=auth.UserResponseFormat}
-// @Failure 400 {object} response.Base
-// @Failure 409 {object} response.Base
-// @Failure 500 {object} response.Base
-// @Router /v1/profile [get]
-func (h *AuthHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(middleware.ClaimsKey("claims")).(*jwt.Claims)
-	if !ok {
-		response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-	res, err := h.Service.GetByUserName(claims.UserName)
-
-	if err != nil {
-		response.WithError(w, err)
-		return
-	}
-	response.WithJSON(w, http.StatusOK, res)
-}
-
-// HandleUpdateProfile updates a users profile.
-// @Summary updates a users profile.
-// @Description This endpoint updates a users profile.
-// @Tags v1/Profile
-// @Security JWTToken
-// @Param User body auth.NamePayload true "The Name to be changed"
-// @Produce json
-// @Success 209 {object} response.Base{data=auth.UserResponseFormat}
-// @Failure 400 {object} response.Base
-// @Failure 409 {object} response.Base
-// @Failure 500 {object} response.Base
-// @Router /v1/profile [put]
-func (h *AuthHandler) HandleUpdateProfile(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	var payload auth.NamePayload
-	err := decoder.Decode(&payload)
-	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
-		return
-	}
-	err = shared.GetValidator().Struct(payload)
-	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
-		return
-	}
-	claims, ok := r.Context().Value(middleware.ClaimsKey("claims")).(*jwt.Claims)
-	if !ok {
-		response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-	res, err := h.Service.UpdateName(payload, claims.UserName)
-	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
-		return
-	}
-	response.WithJSON(w, http.StatusOK, res)
 }
