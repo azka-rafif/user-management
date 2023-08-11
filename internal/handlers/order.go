@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"math"
 	"net/http"
 
 	"github.com/evermos/boilerplate-go/internal/domain/order"
@@ -69,7 +68,7 @@ func (h *OrderHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err := h.Service.GetAll(pg.Limit, pg.Offset, pg.Sort, pg.Field, status, userId, claims.Role, cancelled)
-	totalPage := int(math.Ceil(float64(len(res)) / float64(pg.Limit)))
+	totalPage := pg.GetTotalPages(res)
 	if err != nil {
 		response.WithError(w, err)
 		return

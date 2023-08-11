@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"math"
 	"net/http"
 
 	"github.com/evermos/boilerplate-go/internal/domain/cart"
@@ -220,7 +219,7 @@ func (h *CartHandler) HandleGetAllCarts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	res, err := h.Service.GetAllCarts(pg.Limit, pg.Offset, pg.Sort, pg.Field)
-	totalPage := int(math.Ceil(float64(len(res)) / float64(pg.Limit)))
+	totalPage := pg.GetTotalPages(res)
 
 	if err != nil {
 		response.WithError(w, err)

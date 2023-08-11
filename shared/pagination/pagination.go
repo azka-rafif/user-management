@@ -1,7 +1,9 @@
 package pagination
 
 import (
+	"math"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -78,4 +80,13 @@ func GetPagination(r *http.Request) (pg *Pagination, err error) {
 	field := CheckFieldQuery(ParseQueryParams(r, "field"), "id")
 	pg = NewPaginationQuery(page, limit, field, sort)
 	return
+}
+
+func (p *Pagination) GetTotalPages(res interface{}) int {
+	val := reflect.ValueOf(res)
+	if val.Kind() != reflect.Slice {
+		return 0
+	}
+	length := val.Len()
+	return int(math.Ceil(float64(length) / float64(p.Limit)))
 }
