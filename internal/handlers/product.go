@@ -40,6 +40,18 @@ func (h *ProductHandler) Router(r chi.Router) {
 	})
 }
 
+// HandleCheckout Insert a product.
+// @Summary create a new product.
+// @Description This endpoint inserts a new product.
+// @Tags v1/Product
+// @Security JWTToken
+// @Param CartItemIds body product.ProductPayload true "product to be created"
+// @Produce json
+// @Success 201 {object} response.Base{data=product.ProductResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/products [post]
 func (h *ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var payload product.ProductPayload
@@ -74,6 +86,22 @@ func (h *ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Requ
 	response.WithJSON(w, http.StatusCreated, res)
 }
 
+// HandleGetAll Gets all products.
+// @Summary Gets all products.
+// @Description This endpoint Gets all products available.
+// @Tags v1/Product
+// @Security JWTToken
+// @Param page query int true "current page number"
+// @Param limit query int true "limit of products per page"
+// @Param sort query string false "sort direction"
+// @Param field query string false "field to sort by"
+// @Param product_title query string false "filter by product name"
+// @Produce json
+// @Success 200 {object} response.Base{data=[]product.ProductResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/products [get]
 func (h *ProductHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 	page, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "page"))
 	if err != nil {
