@@ -180,5 +180,13 @@ func (s *CartServiceImpl) GetAllCarts(limit, offset int, sort, field string) (re
 	if err != nil {
 		return
 	}
+	for i, cart := range res {
+		items, err := s.Repo.GetCartItems(cart.Id.String())
+		if err != nil {
+			return res, err
+		}
+		cart = cart.AttachItems(items)
+		res[i] = cart
+	}
 	return
 }
