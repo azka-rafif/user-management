@@ -46,3 +46,17 @@ func CheckFieldQuery(s string, def string) string {
 func ParseQueryParams(r *http.Request, key string) string {
 	return strings.ToLower(r.URL.Query().Get(key))
 }
+
+func GetCancelled(str string) (booleanValue bool) {
+	switch strings.ToLower(str) {
+	case "true":
+		booleanValue = true
+		return
+	case "false":
+		booleanValue = false
+		return
+	default:
+		booleanValue = false
+		return
+	}
+}
