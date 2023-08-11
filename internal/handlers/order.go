@@ -28,6 +28,7 @@ func (h *OrderHandler) Router(r chi.Router) {
 		r.Use(h.JwtAuth.Validate)
 		r.Get("/", h.HandleGetAll)
 		r.Route("/{orderId}", func(r chi.Router) {
+			r.Get("/", h.HandleGetByID)
 			r.Delete("/", h.HandleCancel)
 		})
 	})
@@ -114,6 +115,43 @@ func (h *OrderHandler) HandleCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err := h.Service.CancelOrder(id, userId, claims.Role)
+	if err != nil {
+		response.WithError(w, err)
+		return
+	}
+	response.WithJSON(w, http.StatusOK, res)
+}
+
+// Handleget get an order by id.
+// @Summary gets an Order by id.
+// @Description This endpoint gets an order by id.
+// @Tags v1/Order
+// @Security JWTToken
+// @Param orderId path string true "the order id"
+// @Produce json
+// @Success 200 {object} response.Base{data=order.OrderResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/orders/{orderId} [delete]
+func (h *OrderHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
+	idString := chi.URLParam(r, "orderId")
+	id, err := uuid.FromString(idString)
+	if err != nil {
+		response.WithError(w, failure.BadRequest(err))
+		return
+	}
+	claims, ok := r.Context().Value(middleware.ClaimsKey("claims")).(*jwt.Claims)
+	if !ok {
+		response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	userId, err := uuid.FromString(claims.UserId)
+	if err != nil {
+		response.WithError(w, err)
+		return
+	}
+	res, err := h.Service.GetByID(id, userId)
 	if err != nil {
 		response.WithError(w, err)
 		return
