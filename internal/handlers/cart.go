@@ -201,7 +201,7 @@ func (h *CartHandler) HandleCheckout(w http.ResponseWriter, r *http.Request) {
 // HandleGetAll Gets all carts.
 // @Summary Gets all carts.
 // @Description This endpoint Gets all carts of users.
-// @Tags v1/Order
+// @Tags v1/Cart
 // @Security JWTToken
 // @Param page query int true "current page number"
 // @Param limit query int true "limit of carts per page"
