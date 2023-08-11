@@ -78,7 +78,7 @@ func (u User) NewFromPayload(payload UserPayload) (res User, err error) {
 	}
 	valid := email.Valid(payload.Email)
 	if !valid {
-		err = errors.New("invalid email")
+		err = failure.BadRequest(errors.New("invalid email"))
 		return
 	}
 	res = User{
