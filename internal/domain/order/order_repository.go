@@ -11,7 +11,11 @@ import (
 
 type OrderRepository interface {
 	Create(load Order) (err error)
-	GetAll(limit, offset int, sort, field, status, userId, userRole string) (res []Order, err error)
+	GetAll(limit, offset int, sort, field, status, userId, userRole string, cancelled bool) (res []Order, err error)
+	CancelOrder(load Order) (err error)
+	GetOrderByID(orderId string) (res Order, err error)
+	ExistsByID(orderId string) (exists bool, err error)
+	GetItemsByOrderID(orderId string) (res []OrderItem, err error)
 }
 
 type OrderRepositoryMySQL struct {
@@ -75,7 +79,6 @@ func (r *OrderRepositoryMySQL) txCreateItems(tx *sqlx.Tx, load []OrderItem) (err
 		return
 	}
 	return
-
 }
 
 func (r *OrderRepositoryMySQL) composeBulkInsertItemQuery(load []OrderItem) (query string, params []interface{}, err error) {
@@ -113,7 +116,7 @@ func (r *OrderRepositoryMySQL) composeBulkInsertItemQuery(load []OrderItem) (que
 	return
 }
 
-func (r *OrderRepositoryMySQL) GetAll(limit, offset int, sort, field, status, userId, userRole string) (res []Order, err error) {
+func (r *OrderRepositoryMySQL) GetAll(limit, offset int, sort, field, status, userId, userRole string, cancelled bool) (res []Order, err error) {
 	query := `SELECT * FROM atc_order `
 
 	if userRole != "admin" {
@@ -129,9 +132,115 @@ func (r *OrderRepositoryMySQL) GetAll(limit, offset int, sort, field, status, us
 		}
 		query += fmt.Sprintf("status = '%s' ", status)
 	}
+	if cancelled {
+		exists := strings.Contains(query, "WHERE")
+		if !exists {
+			query += `WHERE deleted_at IS NOT NULL `
+		}
+		if exists {
+			query += `AND deleted_at IS NOT NULL `
+		}
+
+	}
 	query += fmt.Sprintf("ORDER BY %s %s LIMIT %d OFFSET %d", field, sort, limit, offset)
 	err = r.DB.Read.Select(&res, query)
-	println(query)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *OrderRepositoryMySQL) CancelOrder(load Order) (err error) {
+	return r.DB.WithTransaction(func(db *sqlx.Tx, c chan error) {
+		if err := r.txUpdate(db, load); err != nil {
+			c <- err
+			return
+		}
+		for _, item := range load.OrderItems {
+			if err := r.txUpdateItem(db, item); err != nil {
+				c <- err
+				return
+			}
+		}
+		c <- nil
+	})
+}
+
+func (r *OrderRepositoryMySQL) txUpdate(tx *sqlx.Tx, load Order) (err error) {
+	query := `
+	UPDATE atc_order
+	SET
+		total_price = :total_price,
+		status = :status,
+		created_at = :created_at,
+		updated_at = :updated_at,
+		deleted_at = :deleted_at,
+		created_by = :created_by,
+		updated_by = :updated_by,
+		deleted_by = :deleted_by
+	WHERE id = :id`
+	stmt, err := tx.PrepareNamed(query)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(load)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *OrderRepositoryMySQL) txUpdateItem(tx *sqlx.Tx, load OrderItem) (err error) {
+	query := `
+	UPDATE order_item
+	SET
+		price = :price,
+		quantity = :quantity,
+		created_at = :created_at,
+		updated_at = :updated_at,
+		deleted_at = :deleted_at,
+		created_by = :created_by,
+		updated_by = :updated_by,
+		deleted_by = :deleted_by
+	WHERE id = :id`
+	stmt, err := tx.PrepareNamed(query)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(load)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *OrderRepositoryMySQL) GetOrderByID(orderId string) (res Order, err error) {
+	err = r.DB.Read.Get(&res, "SELECT * FROM atc_order WHERE id = ?", orderId)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *OrderRepositoryMySQL) ExistsByID(orderId string) (exists bool, err error) {
+	err = r.DB.Read.Get(&exists, "SELECT COUNT(id) FROM atc_order WHERE id = ?", orderId)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *OrderRepositoryMySQL) GetItemsByOrderID(orderId string) (res []OrderItem, err error) {
+	err = r.DB.Read.Select(&res, "SELECT * FROM order_item WHERE order_id = ?", orderId)
 	if err != nil {
 		logger.ErrorWithStack(err)
 		return

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evermos/boilerplate-go/shared"
+	"github.com/evermos/boilerplate-go/shared/failure"
 	"github.com/evermos/boilerplate-go/shared/nuuid"
 	"github.com/gofrs/uuid"
 	"github.com/guregu/null"
@@ -148,4 +149,42 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 
 func (o *OrderItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(o.ToResponseFormat())
+}
+
+func (o *Order) CancelOrder(userId uuid.UUID) (err error) {
+	if o.isCancelled() {
+		err = failure.Conflict("cancel", "order", "already marked as cancelled")
+		return
+	}
+	o.DeletedAt = null.TimeFrom(time.Now().UTC())
+	o.DeletedBy = nuuid.From(userId)
+	for i, item := range o.OrderItems {
+		err = item.CancelOrderItem(userId)
+		if err != nil {
+			return
+		}
+		o.OrderItems[i] = item
+	}
+	err = o.Validate()
+	return
+}
+
+func (o *OrderItem) CancelOrderItem(userId uuid.UUID) (err error) {
+	if o.isCancelled() {
+		err = failure.Conflict("cancel", "order_item", "already marked as cancelled")
+		return
+	}
+	o.DeletedAt = null.TimeFrom(time.Now().UTC())
+	o.DeletedBy = nuuid.From(userId)
+
+	err = o.Validate()
+	return
+}
+
+func (o *Order) isCancelled() bool {
+	return o.DeletedAt.Valid && o.DeletedBy.Valid
+}
+
+func (o *OrderItem) isCancelled() bool {
+	return o.DeletedAt.Valid && o.DeletedBy.Valid
 }

@@ -1,11 +1,15 @@
 package order
 
-import "github.com/gofrs/uuid"
+import (
+	"github.com/evermos/boilerplate-go/shared/failure"
+	"github.com/gofrs/uuid"
+)
 
 type OrderService interface {
 	CreateOrder(load OrderPayload, itemLoads []OrderItemPayload) (res Order, err error)
 	CreateOrderItem(load OrderItemPayload) (res OrderItem, err error)
-	GetAll(limit, offset int, sort, field, status string, userId uuid.UUID, userRole string) (res []Order, err error)
+	GetAll(limit, offset int, sort, field, status string, userId uuid.UUID, userRole string, cancelled bool) (res []Order, err error)
+	CancelOrder(orderId, userId uuid.UUID, userRole string) (res Order, err error)
 }
 
 type OrderServiceImpl struct {
@@ -44,10 +48,41 @@ func (s *OrderServiceImpl) CreateOrderItem(load OrderItemPayload) (res OrderItem
 	return
 }
 
-func (s *OrderServiceImpl) GetAll(limit, offset int, sort, field, status string, userId uuid.UUID, userRole string) (res []Order, err error) {
-	res, err = s.Repo.GetAll(limit, offset, sort, field, status, userId.String(), userRole)
+func (s *OrderServiceImpl) GetAll(limit, offset int, sort, field, status string, userId uuid.UUID, userRole string, cancelled bool) (res []Order, err error) {
+	res, err = s.Repo.GetAll(limit, offset, sort, field, status, userId.String(), userRole, cancelled)
 	if err != nil {
 		return
 	}
+	return
+}
+
+func (s *OrderServiceImpl) CancelOrder(orderId, userId uuid.UUID, userRole string) (res Order, err error) {
+	exists, err := s.Repo.ExistsByID(orderId.String())
+	if err != nil {
+		return
+	}
+	if !exists {
+		err = failure.NotFound("Order")
+		return
+	}
+	res, err = s.Repo.GetOrderByID(orderId.String())
+	if err != nil {
+		return
+	}
+	if userId.String() != res.UserId.String() && userRole != "admin" {
+		err = failure.Unauthorized("unauthorized, invalid credentials")
+		return
+	}
+	items, err := s.Repo.GetItemsByOrderID(orderId.String())
+	if err != nil {
+		return
+	}
+	res = res.AttachItems(items)
+	err = res.CancelOrder(userId)
+
+	if err != nil {
+		return
+	}
+	err = s.Repo.CancelOrder(res)
 	return
 }
