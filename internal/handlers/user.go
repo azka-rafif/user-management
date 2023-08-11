@@ -8,6 +8,7 @@ import (
 	"github.com/evermos/boilerplate-go/shared"
 	"github.com/evermos/boilerplate-go/shared/failure"
 	"github.com/evermos/boilerplate-go/shared/jwt"
+	"github.com/evermos/boilerplate-go/shared/pagination"
 	"github.com/evermos/boilerplate-go/transport/http/middleware"
 	"github.com/evermos/boilerplate-go/transport/http/response"
 	"github.com/go-chi/chi"
@@ -26,14 +27,17 @@ func ProvideUserHandler(service user.UserService, jwtAuth *middleware.JwtAuthent
 func (h *UserHandler) Router(r chi.Router) {
 	r.Route("/users", func(r chi.Router) {
 		r.Use(h.jwtAuth.Validate)
-		r.Get("/", h.HandleGetUser)
-
 		r.Group(func(r chi.Router) {
 			r.Use(h.jwtAuth.IsUser)
 			r.Route("/{userId}", func(r chi.Router) {
+				r.Get("/", h.HandleGetUser)
 				r.Put("/", h.HandleUpdateUser)
 				r.Delete("/", h.HandleDeleteUser)
 			})
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(h.jwtAuth.AdminOnly)
+			r.Get("/", h.HandleGetAll)
 		})
 	})
 }
@@ -50,12 +54,24 @@ func (h *UserHandler) Router(r chi.Router) {
 // @Failure 500 {object} response.Base
 // @Router /v1/users [get]
 func (h *UserHandler) HandleGetUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "userId")
+	userId, err := uuid.FromString(id)
+	if err != nil {
+		response.WithError(w, failure.BadRequest(err))
+		return
+	}
 	claims, ok := r.Context().Value(middleware.ClaimsKey("claims")).(*jwt.Claims)
 	if !ok {
 		response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
-	res, err := h.Service.GetByUserName(claims.UserName)
+
+	if userId.String() != claims.UserId && claims.Role != "admin" {
+		response.WithError(w, failure.Unauthorized("invalid credentials"))
+		return
+	}
+
+	res, err := h.Service.GetByUserName(userId.String())
 
 	if err != nil {
 		response.WithError(w, err)
@@ -140,4 +156,12 @@ func (h *UserHandler) HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.WithJSON(w, http.StatusOK, res)
+}
+
+func (h *UserHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
+	pg, err := pagination.GetPagination(r)
+	if err != nil {
+		response.WithError(w, err)
+		return
+	}
 }
