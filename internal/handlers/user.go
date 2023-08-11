@@ -19,17 +19,14 @@ type UserHandler struct {
 	jwtAuth *middleware.JwtAuthentication
 }
 
-func ProvideUserHandler(service user.UserService) UserHandler {
-	return UserHandler{Service: service}
+func ProvideUserHandler(service user.UserService, jwtAuth *middleware.JwtAuthentication) UserHandler {
+	return UserHandler{Service: service, jwtAuth: jwtAuth}
 }
 
 func (h *UserHandler) Router(r chi.Router) {
 	r.Route("/users", func(r chi.Router) {
 		r.Use(h.jwtAuth.Validate)
-
-		r.Group(func(r chi.Router) {
-			r.Get("/", h.HandleGetUser)
-		})
+		r.Get("/", h.HandleGetUser)
 
 		r.Group(func(r chi.Router) {
 			r.Use(h.jwtAuth.IsUser)
@@ -43,7 +40,7 @@ func (h *UserHandler) Router(r chi.Router) {
 
 // HandleValidate Get User User.
 // @Summary Gets a User User.
-// @Description This endpoint Get User User.
+// @Description This endpoint Get User.
 // @Tags v1/User
 // @Security JWTToken
 // @Produce json
