@@ -95,7 +95,7 @@ func (h *CartHandler) HandleAddToCart(w http.ResponseWriter, r *http.Request) {
 // @Security JWTToken
 // @Param cartId path string true "the cart id"
 // @Produce json
-// @Success 201 {object} response.Base{data=cart.CartResponseFormat}
+// @Success 200 {object} response.Base{data=cart.CartResponseFormat}
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
@@ -122,7 +122,7 @@ func (h *CartHandler) HandleGetCart(w http.ResponseWriter, r *http.Request) {
 // @Security JWTToken
 // @Param cartId path string true "the cart id"
 // @Produce json
-// @Success 201 {object} response.Base{data=[]cart.CartItemResponseFormat}
+// @Success 200 {object} response.Base{data=[]cart.CartItemResponseFormat}
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
