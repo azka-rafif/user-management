@@ -101,3 +101,24 @@ func (a *JwtAuthentication) CartAccess(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (a *JwtAuthentication) IsUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "userId")
+		userId, err := uuid.FromString(id)
+		if err != nil {
+			response.WithError(w, failure.BadRequest(err))
+			return
+		}
+		claims, ok := r.Context().Value(ClaimsKey("claims")).(*jwt.Claims)
+		if !ok {
+			response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+		if userId.String() != claims.UserId && claims.Role != "admin" {
+			response.WithError(w, failure.Unauthorized("Unauthorized, invalid credentials "))
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
