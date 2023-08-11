@@ -96,7 +96,6 @@ BEGIN
   VALUES (NEW.cart_id, NEW.id, NEW.created_at, NEW.updated_at, NEW.deleted_at, NEW.id, NEW.id, NEW.deleted_by);
 END;
 
-
 CREATE TRIGGER `update_cart_items_on_product_price_update` AFTER UPDATE ON `product`
 FOR EACH ROW
 BEGIN
@@ -104,7 +103,6 @@ BEGIN
   SET `price` = NEW.price * `quantity`
   WHERE `product_id` = NEW.id;
 END;
-
 
 CREATE TRIGGER `update_stock_product_on_insert` AFTER INSERT ON `order_item`
 FOR EACH ROW 
@@ -114,7 +112,6 @@ BEGIN
 	WHERE id = NEW.product_id;
 END;
 
-
 CREATE TRIGGER `update_stock_product_on_delete` AFTER DELETE ON `order_item`
 FOR EACH ROW
 BEGIN
@@ -123,5 +120,26 @@ BEGIN
   WHERE `id` = OLD.product_id;
 END;
 
+CREATE TRIGGER before_order_item_update
+BEFORE UPDATE ON order_item
+FOR EACH ROW
+BEGIN
+    IF NEW.deleted_at IS NOT NULL AND NEW.deleted_by IS NOT NULL THEN
+        UPDATE product
+        SET stock = stock + NEW.quantity
+        WHERE id = NEW.product_id;
+    END IF;
+END;
+
+CREATE TRIGGER after_order_cancel
+AFTER UPDATE ON atc_order
+FOR EACH ROW
+BEGIN
+    UPDATE order_item
+    SET
+      deleted_at = NEW.deleted_at
+      deleted_by = NEW.deleted_by
+    WHERE order_id = NEW.id;
+END;
 |
 DELIMITER ;
