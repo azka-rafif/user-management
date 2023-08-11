@@ -11,6 +11,7 @@ type DomainHandlers struct {
 	ProductHandler handlers.ProductHandler
 	CartHandler    handlers.CartHandler
 	OrderHandler   handlers.OrderHandler
+	UserHandler    handlers.UserHandler
 }
 
 // Router is the router struct containing handlers.
@@ -32,5 +33,6 @@ func (r *Router) SetupRoutes(mux *chi.Mux) {
 		r.DomainHandlers.ProductHandler.Router(rc)
 		r.DomainHandlers.CartHandler.Router(rc)
 		r.DomainHandlers.OrderHandler.Router(rc)
+		r.DomainHandlers.UserHandler.Router(rc)
 	})
 }
