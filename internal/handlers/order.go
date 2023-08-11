@@ -51,21 +51,13 @@ func (h *OrderHandler) Router(r chi.Router) {
 // @Failure 500 {object} response.Base
 // @Router /v1/orders [get]
 func (h *OrderHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
-	page, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "page"))
+	pg, err := pagination.GetPagination(r)
 	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
+		response.WithError(w, err)
 		return
 	}
-	limit, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "limit"))
-	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
-		return
-	}
-	sort := pagination.GetSortDirection(pagination.ParseQueryParams(r, "sort"))
-	field := pagination.CheckFieldQuery(pagination.ParseQueryParams(r, "field"), "id")
 	status := pagination.ParseQueryParams(r, "status")
 	cancelled := pagination.GetCancelled(pagination.ParseQueryParams(r, "cancelled"))
-	offset := (page - 1) * limit
 	claims, ok := r.Context().Value(middleware.ClaimsKey("claims")).(*jwt.Claims)
 	if !ok {
 		response.WithMessage(w, http.StatusUnauthorized, "Unauthorized")
@@ -76,13 +68,13 @@ func (h *OrderHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 		response.WithError(w, err)
 		return
 	}
-	res, err := h.Service.GetAll(limit, offset, sort, field, status, userId, claims.Role, cancelled)
-	totalPage := int(math.Ceil(float64(len(res)) / float64(limit)))
+	res, err := h.Service.GetAll(pg.Limit, pg.Offset, pg.Sort, pg.Field, status, userId, claims.Role, cancelled)
+	totalPage := int(math.Ceil(float64(len(res)) / float64(pg.Limit)))
 	if err != nil {
 		response.WithError(w, err)
 		return
 	}
-	response.WithPagination(w, http.StatusOK, res, page, limit, totalPage)
+	response.WithPagination(w, http.StatusOK, res, pg.Page, pg.Limit, totalPage)
 }
 
 // HandleCancel cancel an order.

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/evermos/boilerplate-go/shared/failure"
 )
 
 func ConvertToInt(s string) (int, error) {
@@ -18,9 +20,9 @@ type Pagination struct {
 	Sort   string `db:"sort"`
 }
 
-func NewPaginationQuery(page, limit int, field, sort string) Pagination {
+func NewPaginationQuery(page, limit int, field, sort string) *Pagination {
 	pg := Pagination{Page: page, Limit: limit, Offset: (page - 1) * limit, Field: field, Sort: sort}
-	return pg
+	return &pg
 }
 
 func GetSortDirection(s string) string {
@@ -59,4 +61,21 @@ func GetCancelled(str string) (booleanValue bool) {
 		booleanValue = false
 		return
 	}
+}
+
+func GetPagination(r *http.Request) (pg *Pagination, err error) {
+	page, err := ConvertToInt(ParseQueryParams(r, "page"))
+	if err != nil {
+		err = failure.BadRequest(err)
+		return
+	}
+	limit, err := ConvertToInt(ParseQueryParams(r, "limit"))
+	if err != nil {
+		err = failure.BadRequest(err)
+		return
+	}
+	sort := GetSortDirection(ParseQueryParams(r, "sort"))
+	field := CheckFieldQuery(ParseQueryParams(r, "field"), "id")
+	pg = NewPaginationQuery(page, limit, field, sort)
+	return
 }
