@@ -1,6 +1,8 @@
 package user
 
 import (
+	"fmt"
+
 	"github.com/evermos/boilerplate-go/infras"
 	"github.com/evermos/boilerplate-go/shared/failure"
 	"github.com/evermos/boilerplate-go/shared/logger"
@@ -15,6 +17,7 @@ type UserRepository interface {
 	ExistsByUserName(userName string) (exists bool, err error)
 	GetByUserName(userName string) (user User, err error)
 	Update(user User) (err error)
+	GetAll(limit, offset int, sort, field string) (res []User, err error)
 }
 
 type UserRepositoryMySQL struct {
@@ -137,6 +140,17 @@ func (r *UserRepositoryMySQL) txUpdate(tx *sqlx.Tx, payload User) (err error) {
 	_, err = stmt.Exec(payload)
 	if err != nil {
 		tx.Rollback()
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *UserRepositoryMySQL) GetAll(limit, offset int, sort, field string) (res []User, err error) {
+	query := `SELECT * FROM user `
+	query += fmt.Sprintf("ORDER BY %s %s LIMIT %d OFFSET %d", field, sort, limit, offset)
+	err = r.DB.Read.Select(&res, query)
+	if err != nil {
 		logger.ErrorWithStack(err)
 		return
 	}

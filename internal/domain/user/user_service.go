@@ -10,6 +10,7 @@ type UserService interface {
 	Create(load UserPayload) (user User, err error)
 	UpdateName(payload NamePayload, userId uuid.UUID) (user User, err error)
 	DeleteByID(userId, userDeleter uuid.UUID) (user User, err error)
+	GetAll(limit, offset int, sort, field string) (res []User, err error)
 }
 
 type UserServiceImpl struct {
@@ -77,5 +78,13 @@ func (s *UserServiceImpl) DeleteByID(userId, userDeleter uuid.UUID) (user User, 
 		return
 	}
 
+	return
+}
+
+func (s *UserServiceImpl) GetAll(limit, offset int, sort, field string) (res []User, err error) {
+	res, err = s.Repo.GetAll(limit, offset, sort, field)
+	if err != nil {
+		return
+	}
 	return
 }

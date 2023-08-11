@@ -163,10 +163,32 @@ func (h *UserHandler) HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	response.WithJSON(w, http.StatusOK, res)
 }
 
+// HandleGetAll Gets all Users.
+// @Summary Gets all Users.
+// @Description This endpoint Gets all Users available.
+// @Tags v1/User
+// @Security JWTToken
+// @Param page query int true "current page number"
+// @Param limit query int true "limit of Users per page"
+// @Param sort query string false "sort direction"
+// @Param field query string false "field to sort by"
+// @Produce json
+// @Success 200 {object} response.Base{data=[]user.UserResponseFormat}
+// @Failure 400 {object} response.Base
+// @Failure 409 {object} response.Base
+// @Failure 500 {object} response.Base
+// @Router /v1/users [get]
 func (h *UserHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
 	pg, err := pagination.GetPagination(r)
 	if err != nil {
 		response.WithError(w, err)
 		return
 	}
+	res, err := h.Service.GetAll(pg.Limit, pg.Offset, pg.Sort, pg.Field)
+	totalPage := pg.GetTotalPages(res)
+	if err != nil {
+		response.WithError(w, err)
+		return
+	}
+	response.WithPagination(w, http.StatusOK, res, pg.Page, pg.Limit, totalPage)
 }
