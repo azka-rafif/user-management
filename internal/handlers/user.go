@@ -24,7 +24,7 @@ func ProvideUserHandler(service user.UserService) UserHandler {
 }
 
 func (h *UserHandler) Router(r chi.Router) {
-	r.Route("/user", func(r chi.Router) {
+	r.Route("/users", func(r chi.Router) {
 		r.Use(h.jwtAuth.Validate)
 
 		r.Group(func(r chi.Router) {

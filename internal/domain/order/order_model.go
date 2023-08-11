@@ -143,11 +143,11 @@ func (o OrderItem) ToResponseFormat() OrderItemResponseFormat {
 	return OrderItemResponseFormat(o)
 }
 
-func (o *Order) MarshalJSON() ([]byte, error) {
+func (o Order) MarshalJSON() ([]byte, error) {
 	return json.Marshal(o.ToResponseFormat())
 }
 
-func (o *OrderItem) MarshalJSON() ([]byte, error) {
+func (o OrderItem) MarshalJSON() ([]byte, error) {
 	return json.Marshal(o.ToResponseFormat())
 }
 
