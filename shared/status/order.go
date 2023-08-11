@@ -1,6 +1,8 @@
 package status
 
-import "strings"
+import (
+	"strings"
+)
 
 type OrderStatus int
 
