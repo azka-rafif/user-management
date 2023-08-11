@@ -10,6 +10,7 @@ type OrderService interface {
 	CreateOrderItem(load OrderItemPayload) (res OrderItem, err error)
 	GetAll(limit, offset int, sort, field, status string, userId uuid.UUID, userRole string, cancelled bool) (res []Order, err error)
 	CancelOrder(orderId, userId uuid.UUID, userRole string) (res Order, err error)
+	GetByID(orderId, userId uuid.UUID) (res Order, err error)
 }
 
 type OrderServiceImpl struct {
@@ -53,6 +54,16 @@ func (s *OrderServiceImpl) GetAll(limit, offset int, sort, field, status string,
 	if err != nil {
 		return
 	}
+
+	for i, order := range res {
+		items, err := s.Repo.GetItemsByOrderID(order.Id.String())
+		if err != nil {
+			return res, err
+		}
+		order = order.AttachItems(items)
+		res[i] = order
+	}
+
 	return
 }
 
@@ -84,5 +95,22 @@ func (s *OrderServiceImpl) CancelOrder(orderId, userId uuid.UUID, userRole strin
 		return
 	}
 	err = s.Repo.CancelOrder(res)
+	return
+}
+
+func (s *OrderServiceImpl) GetByID(orderId, userId uuid.UUID) (res Order, err error) {
+	res, err = s.Repo.GetOrderByID(orderId.String())
+	if err != nil {
+		return
+	}
+	if res.UserId != userId {
+		err = failure.Unauthorized("Invalid Credentials")
+		return
+	}
+	items, err := s.Repo.GetItemsByOrderID(orderId.String())
+	if err != nil {
+		return
+	}
+	res = res.AttachItems(items)
 	return
 }
