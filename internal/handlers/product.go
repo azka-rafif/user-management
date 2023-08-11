@@ -103,27 +103,18 @@ func (h *ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Requ
 // @Failure 500 {object} response.Base
 // @Router /v1/products [get]
 func (h *ProductHandler) HandleGetAll(w http.ResponseWriter, r *http.Request) {
-	page, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "page"))
+	pg, err := pagination.GetPagination(r)
 	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
+		response.WithError(w, err)
 		return
 	}
-
-	limit, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "limit"))
-	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
-		return
-	}
-	sort := pagination.GetSortDirection(pagination.ParseQueryParams(r, "sort"))
-	field := pagination.CheckFieldQuery(pagination.ParseQueryParams(r, "field"), "id")
 	productTitle := pagination.ParseQueryParams(r, "product_title")
-	offset := (page - 1) * limit
-	res, err := h.Service.GetAll(limit, offset, sort, field, productTitle)
-	totalPage := int(math.Ceil(float64(len(res)) / float64(limit)))
+	res, err := h.Service.GetAll(pg.Limit, pg.Offset, pg.Sort, pg.Field, productTitle)
+	totalPage := int(math.Ceil(float64(len(res)) / float64(pg.Limit)))
 
 	if err != nil {
 		response.WithError(w, err)
 		return
 	}
-	response.WithPagination(w, http.StatusOK, res, page, limit, totalPage)
+	response.WithPagination(w, http.StatusOK, res, pg.Page, pg.Limit, totalPage)
 }

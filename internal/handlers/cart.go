@@ -214,26 +214,17 @@ func (h *CartHandler) HandleCheckout(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.Base
 // @Router /v1/carts [get]
 func (h *CartHandler) HandleGetAllCarts(w http.ResponseWriter, r *http.Request) {
-	page, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "page"))
+	pg, err := pagination.GetPagination(r)
 	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
+		response.WithError(w, err)
 		return
 	}
-
-	limit, err := pagination.ConvertToInt(pagination.ParseQueryParams(r, "limit"))
-	if err != nil {
-		response.WithError(w, failure.BadRequest(err))
-		return
-	}
-	sort := pagination.GetSortDirection(pagination.ParseQueryParams(r, "sort"))
-	field := pagination.CheckFieldQuery(pagination.ParseQueryParams(r, "field"), "id")
-	offset := (page - 1) * limit
-	res, err := h.Service.GetAllCarts(limit, offset, sort, field)
-	totalPage := int(math.Ceil(float64(len(res)) / float64(limit)))
+	res, err := h.Service.GetAllCarts(pg.Limit, pg.Offset, pg.Sort, pg.Field)
+	totalPage := int(math.Ceil(float64(len(res)) / float64(pg.Limit)))
 
 	if err != nil {
 		response.WithError(w, err)
 		return
 	}
-	response.WithPagination(w, http.StatusOK, res, page, limit, totalPage)
+	response.WithPagination(w, http.StatusOK, res, pg.Page, pg.Limit, totalPage)
 }
