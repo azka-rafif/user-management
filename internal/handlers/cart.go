@@ -54,7 +54,7 @@ func (h *CartHandler) Router(r chi.Router) {
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
-// @Router /v1/cart/{cartId} [post]
+// @Router /v1/carts/{cartId} [post]
 func (h *CartHandler) HandleAddToCart(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	cartId, err := uuid.FromString(idString)
@@ -105,7 +105,7 @@ func (h *CartHandler) HandleAddToCart(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
-// @Router /v1/cart/{cartId} [get]
+// @Router /v1/carts/{cartId} [get]
 func (h *CartHandler) HandleGetCart(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	id, err := uuid.FromString(idString)
@@ -132,7 +132,7 @@ func (h *CartHandler) HandleGetCart(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
-// @Router /v1/cart/{cartId}/items [get]
+// @Router /v1/carts/{cartId}/items [get]
 func (h *CartHandler) HandleGetCartItems(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	id, err := uuid.FromString(idString)
@@ -160,7 +160,7 @@ func (h *CartHandler) HandleGetCartItems(w http.ResponseWriter, r *http.Request)
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
-// @Router /v1/cart/{cartId}/checkout [post]
+// @Router /v1/carts/{cartId}/checkout [post]
 func (h *CartHandler) HandleCheckout(w http.ResponseWriter, r *http.Request) {
 	idString := chi.URLParam(r, "cartId")
 	cartId, err := uuid.FromString(idString)
