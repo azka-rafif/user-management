@@ -13,8 +13,9 @@ import (
 type UserRepository interface {
 	Create(user User) (err error)
 	ExistsByID(userId uuid.UUID) (exists bool, err error)
-	GetByUserId(userId uuid.UUID) (user User, err error)
 	ExistsByUserName(userName string) (exists bool, err error)
+	ExistsByEmail(email string) (exists bool, err error)
+	GetByUserId(userId uuid.UUID) (user User, err error)
 	GetByUserName(userName string) (user User, err error)
 	Update(user User) (err error)
 	GetAll(limit, offset int, sort, field string) (res []User, err error)
@@ -61,6 +62,15 @@ func (r *UserRepositoryMySQL) GetByUserId(userId uuid.UUID) (user User, err erro
 
 func (r *UserRepositoryMySQL) ExistsByUserName(userName string) (exists bool, err error) {
 	err = r.DB.Read.Get(&exists, "SELECT COUNT(username) FROM user WHERE username = ?", userName)
+	if err != nil {
+		logger.ErrorWithStack(err)
+		return
+	}
+	return
+}
+
+func (r *UserRepositoryMySQL) ExistsByEmail(email string) (exists bool, err error) {
+	err = r.DB.Read.Get(&exists, "SELECT COUNT(email) FROM user WHERE email = ?", email)
 	if err != nil {
 		logger.ErrorWithStack(err)
 		return

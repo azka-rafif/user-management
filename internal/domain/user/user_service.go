@@ -23,6 +23,22 @@ func ProvideUserServiceImpl(repo UserRepository) *UserServiceImpl {
 }
 
 func (s *UserServiceImpl) Create(load UserPayload) (user User, err error) {
+	exists, err := s.Repo.ExistsByUserName(load.UserName)
+	if err != nil {
+		return
+	}
+	if exists {
+		err = failure.Conflict("create", "user", "already exists with that username")
+		return
+	}
+	exists, err = s.Repo.ExistsByEmail(load.Email)
+	if err != nil {
+		return
+	}
+	if exists {
+		err = failure.Conflict("create", "user", "already exists with that email")
+		return
+	}
 	user, err = user.NewFromPayload(load)
 	if err != nil {
 		return
@@ -35,6 +51,14 @@ func (s *UserServiceImpl) Create(load UserPayload) (user User, err error) {
 }
 
 func (s *UserServiceImpl) GetByUserName(userName string) (user User, err error) {
+	exists, err := s.Repo.ExistsByUserName(userName)
+	if err != nil {
+		return
+	}
+	if !exists {
+		err = failure.NotFound("user")
+		return
+	}
 	user, err = s.Repo.GetByUserName(userName)
 
 	if err != nil {
@@ -45,6 +69,14 @@ func (s *UserServiceImpl) GetByUserName(userName string) (user User, err error) 
 }
 
 func (s *UserServiceImpl) UpdateName(payload NamePayload, userId uuid.UUID) (user User, err error) {
+	exists, err := s.Repo.ExistsByID(userId)
+	if err != nil {
+		return
+	}
+	if !exists {
+		err = failure.NotFound("user")
+		return
+	}
 	user, err = s.Repo.GetByUserId(userId)
 	if err != nil {
 		return

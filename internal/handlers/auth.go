@@ -99,7 +99,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.Service.Login(payload)
 	if err != nil {
-		response.WithError(w, failure.InternalError(err))
+		response.WithError(w, err)
 		return
 	}
 
