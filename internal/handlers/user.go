@@ -29,10 +29,6 @@ func (h *UserHandler) Router(r chi.Router) {
 		r.Use(h.jwtAuth.Validate)
 
 		r.Group(func(r chi.Router) {
-			r.Get("/", h.HandleGetUser)
-		})
-
-		r.Group(func(r chi.Router) {
 			r.Use(h.jwtAuth.IsUser)
 			r.Route("/{userId}", func(r chi.Router) {
 				r.Get("/", h.HandleGetUser)
@@ -52,12 +48,13 @@ func (h *UserHandler) Router(r chi.Router) {
 // @Description This endpoint Get User.
 // @Tags v1/User
 // @Security JWTToken
+// @Param userId path string true "id of user being searched"
 // @Produce json
 // @Success 200 {object} response.Base{data=user.UserResponseFormat}
 // @Failure 400 {object} response.Base
 // @Failure 409 {object} response.Base
 // @Failure 500 {object} response.Base
-// @Router /v1/users [get]
+// @Router /v1/users/{userId} [get]
 func (h *UserHandler) HandleGetUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "userId")
 	userId, err := uuid.FromString(id)
@@ -76,7 +73,7 @@ func (h *UserHandler) HandleGetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.Service.GetByUserName(userId.String())
+	res, err := h.Service.GetByUserID(userId)
 
 	if err != nil {
 		response.WithError(w, err)

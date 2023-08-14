@@ -43,6 +43,7 @@ func (h *OrderHandler) Router(r chi.Router) {
 // @Param sort query string false "sort direction"
 // @Param field query string false "field to sort by"
 // @Param status query string false "filter by order status"
+// @Param cancelled query bool false "filter by cancelled or not"
 // @Produce json
 // @Success 200 {object} response.Base{data=[]order.OrderResponseFormat}
 // @Failure 400 {object} response.Base
